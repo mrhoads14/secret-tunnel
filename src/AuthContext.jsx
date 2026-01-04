@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const API = "https://fsa-jwt-practice.herokuapp.com";
 
@@ -22,18 +22,38 @@ export function AuthProvider({ children }) {
       })
     });
     const respObj = await resp.json();
-    console.log("resp Obj: ", respObj);
     if(respObj.success && respObj.token) {
       setToken(respObj.token);
-      console.log("i set the token");
+      setLocation("TABLET");
     } else {
       throw Error("Did not receive a successful response from signup API");
     }
   }
 
-  // TODO: authenticate
+  const authenticate = async () => {
+    if(token) {
+      // do stuff
+      const resp = await fetch(API + "/authenticate", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      const respObj = await resp.json();
+      console.log("auth respObj: ", respObj);
+      if(respObj.success) {
+        setLocation("TUNNEL");
+      } else {
+        throw Error("Authentication GET request failed!");
+      }
+    } else {
+      throw Error("No token in state!");
+    }
+  }
 
-  const value = { location, signup };
+  //useEffect(authenticate, [token]);
+  const value = { location, signup, authenticate };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
